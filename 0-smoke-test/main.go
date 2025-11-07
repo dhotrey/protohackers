@@ -39,7 +39,9 @@ func main() {
 					}
 					log.Fatalf("failed to read data from client %s ,\n Err : %s", ctx.Value("clientAddr"), err)
 				}
-				log.Printf("(%s) Got data : \n%s ", ctx.Value("clientAddr"), buff[:n])
+				// log.Printf("(%s) Got data : \n%s ", ctx.Value("clientAddr"), buff[:n])
+				// log the number of bytes received
+				log.Printf("(%s) Received %d bytes", ctx.Value("clientAddr"), n)
 				_, err = conn.Write(buff[:n])
 				if err != nil {
 					log.Fatalf("(%s) failed to write data Err %s:", ctx.Value("clientAddr"), err)

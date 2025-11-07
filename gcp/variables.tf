@@ -1,6 +1,6 @@
 variable "project_id" {
   type    = string
-  default = ""
+  default = "protohackers-477316"
 }
 
 variable "region" {
@@ -15,7 +15,7 @@ variable "zone" {
 
 variable "ssh_pub_key_path" {
   type    = string
-  default = ""
+  default = "~/.ssh/id_ed25519.pub"
 }
 
 variable "instance_name" {

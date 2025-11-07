@@ -1,0 +1,97 @@
+# https://taskfile.dev
+version: '3'
+
+vars:
+  # Build/profile settings
+  BUILD_FLAGS: "CGO_ENABLED=0 go build -a -installsuffix cgo"
+  OUTPUT_DIR: bin
+
+  # SSH / Terraform
+  SSH_USER: proto
+  TF_OUTPUT_NAME: external_ip
+  TF_DIR: gcp
+
+tasks:
+  default:
+    cmds:
+      - "echo 'Run `task --list` to see available tasks.'"
+    silent: true
+
+  build:
+    desc: "Build a single Go service (does NOT run it). Usage: task build service=0-smoke-test"
+    cmds:
+      - |
+        set -euo pipefail
+        mkdir -p {{.OUTPUT_DIR}}
+        cd {{.service}}
+        {{.BUILD_FLAGS}} -o ../{{.OUTPUT_DIR}}/{{.service}} .
+        echo "✅ Built {{.OUTPUT_DIR}}/{{.service}}"
+
+  apply:
+    desc: Run terraform apply and print the external IP
+    cmds:
+      - |
+        set -euo pipefail
+        cd {{.TF_DIR}}
+        terraform apply -auto-approve
+        echo
+        echo "Instance IP:"
+        terraform output -raw {{.TF_OUTPUT_NAME}}
+
+  plan:
+    desc: Run terraform plan
+    cmds:
+      - |
+        set -euo pipefail
+        cd {{.TF_DIR}}
+        terraform plan
+
+  destroy:
+    desc: Destroy all Terraform-managed resources
+    cmds:
+      - |
+        set -euo pipefail
+        cd {{.TF_DIR}}
+        terraform destroy -auto-approve
+
+  ip:
+    desc: Print the external IP from Terraform outputs
+    cmds:
+      - |
+        set -euo pipefail
+        cd {{.TF_DIR}}
+        terraform output -raw {{.TF_OUTPUT_NAME}}
+  
+  ssh: 
+    desc: "SSH into the remote instance"
+    cmds:
+      - |
+        set -euo pipefail
+        IP=$(cd {{.TF_DIR}} && terraform output -raw {{.TF_OUTPUT_NAME}})
+        echo "→ Connecting to {{.SSH_USER}}@$IP"
+        ssh -o StrictHostKeyChecking=no {{.SSH_USER}}@"$IP"
+    
+
+  scp:
+    desc: "Copy a local file to the remote instance (usage: task scp file=smoke-test)"
+    vars:
+      ssh_user: "{{.SSH_USER}}"
+      file_path: "{{.OUTPUT_DIR}}/{{.file}}"
+    cmds:
+      - |
+        set -euo pipefail
+        # check if file exists
+        if [ ! -f "{{.file_path}}" ]; then
+          echo "❌ File '{{.file_path}}' does not exist. Build it first"
+          exit 1
+        fi
+        IP=$(cd {{.TF_DIR}} && terraform output -raw {{.TF_OUTPUT_NAME}})
+        echo "→ Copying {{.file_path}} → {{.ssh_user}}@$IP:/home/{{.ssh_user}}/"
+        scp -o StrictHostKeyChecking=no "{{.file_path}}" {{.ssh_user}}@"$IP":/home/{{.ssh_user}}/
+        echo "✅ File copied. To connect: ssh {{.ssh_user}}@$IP"
+    silent: true
+
+  clean:
+    desc: Remove built binaries
+    cmds:
+      - rm -rf {{.OUTPUT_DIR}}/*
