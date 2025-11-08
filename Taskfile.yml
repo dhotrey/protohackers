@@ -17,6 +17,24 @@ tasks:
       - "echo 'Run `task --list` to see available tasks.'"
     silent: true
 
+  build-deploy:
+    desc: "Builds the service and deploys to vps via scp"
+    vars:
+      ssh_user: "{{.SSH_USER}}"
+      file_path: "{{.OUTPUT_DIR}}/{{.service}}"
+    cmds:
+      - |
+        set -euo pipefail
+        mkdir -p {{.OUTPUT_DIR}}
+        cd {{.service}}
+        {{.BUILD_FLAGS}} -o ../{{.file_path}} .
+        echo "✅ Built {{.OUTPUT_DIR}}/{{.service}}"
+        cd .. 
+        IP=$(cd {{.TF_DIR}} && terraform output -raw {{.TF_OUTPUT_NAME}})
+        echo "→ Copying {{.file_path}} → {{.ssh_user}}@$IP:/home/{{.ssh_user}}/"
+        scp -o StrictHostKeyChecking=no "{{.file_path}}" {{.ssh_user}}@"$IP":/home/{{.ssh_user}}/
+        echo "✅ File copied. To connect: ssh {{.ssh_user}}@$IP"
+    silent: true
   build:
     desc: "Build a single Go service (does NOT run it). Usage: task build service=0-smoke-test"
     cmds:
