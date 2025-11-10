@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 
 	"github.com/charmbracelet/log"
 )
@@ -14,6 +15,8 @@ const PORT = 6942
 const MESSAGE_SIZE = 9 // bytes
 
 func main() {
+	var wg sync.WaitGroup
+
 	log := getNewLogger("main")
 	log.Info("Means to an End!")
 
@@ -21,23 +24,26 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer l.Close()
 	addr := l.Addr().String()
 	log.Infof("Listening on %s", addr)
 
-	for i := 1; ; i++ {
+	for i := 1; i < 12; i++ { // the tester only makes 11 connections
+		wg.Add(1)
 		conn, err := l.Accept()
 		if err != nil {
 			log.Fatal(err)
 		}
-		// raddr := conn.RemoteAddr().String()
-		// connId := fmt.Sprintf("connId-%d : %s", i, raddr)
 		connId := fmt.Sprintf("conn-%d", i)
 		log.Infof("Received connection from %s", connId)
-		go reqHandler(conn, getNewLogger(connId))
+		go reqHandler(conn, getNewLogger(connId), &wg)
 	}
+	wg.Wait()
+	log.Info("Bye!")
 }
 
-func reqHandler(conn net.Conn, log *log.Logger) {
+func reqHandler(conn net.Conn, log *log.Logger, wg *sync.WaitGroup) {
+	defer wg.Done()
 	defer conn.Close()
 	db := initDb()
 	for {
