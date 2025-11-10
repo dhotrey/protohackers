@@ -67,3 +67,4 @@ terraform.rc
 
 variables.tf
 # End of https://www.toptal.com/developers/gitignore/api/terraform
+*.log
