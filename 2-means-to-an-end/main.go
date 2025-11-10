@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/charmbracelet/log"
 )
@@ -15,6 +16,7 @@ const PORT = 6942
 const MESSAGE_SIZE = 9 // bytes
 
 func main() {
+	t1 := time.Now()
 	var wg sync.WaitGroup
 
 	log := getNewLogger("main")
@@ -39,7 +41,7 @@ func main() {
 		go reqHandler(conn, getNewLogger(connId), &wg)
 	}
 	wg.Wait()
-	log.Info("Bye!")
+	log.Infof("Finished running the test suite in %v seconds ", time.Since(t1).Seconds())
 }
 
 func reqHandler(conn net.Conn, log *log.Logger, wg *sync.WaitGroup) {

@@ -5,4 +5,8 @@ This is challenge #2 on [protohackers](https://protohackers.com/problem/2). In t
 
 # Observations
 
-## Initial Performance
+1. The baseline performance , where we write logs to stdout and no particular performance optimizations have been made.
+    - Finished running the test suite in 28.414111084 seconds
+
+2. Writing logs to logfile instead of stdout.
+
