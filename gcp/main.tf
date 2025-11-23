@@ -33,7 +33,8 @@ resource "google_compute_firewall" "protohackers_ingress" {
     ports    = ["6942"]
   }
 
-  source_ranges = ["206.189.113.124/32"]
+  source_ranges = ["0.0.0.0/0"]
+  # source_ranges = ["206.189.113.124/32"]
   description   = "Allow inbound TCP 6942 from Protohackers tester"
 }
 
@@ -49,6 +50,7 @@ resource "google_compute_firewall" "protohackers_egress" {
     protocol = "all"
   }
 
-  destination_ranges = ["206.189.113.124/32"]
+  destination_ranges = ["0.0.0.0/0"]
+  # destination_ranges = ["206.189.113.124/32"]
   description        = "Allow outbound traffic to Protohackers tester"
 }
