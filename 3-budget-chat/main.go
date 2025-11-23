@@ -47,7 +47,7 @@ func main() {
 func reqHandler(conn net.Conn, log *log.Logger, chatRoom *Room) {
 	defer conn.Close()
 	welcomeMsg := "Welcome to budgetchat! What shall I call you?"
-	fmt.Fprintln(conn, "Welcome to budgetchat! What shall I call you?")
+	fmt.Fprintln(conn, welcomeMsg)
 	log.Debug(welcomeMsg)
 	scanner := bufio.NewScanner(conn)
 	scanner.Scan()
@@ -62,6 +62,8 @@ func reqHandler(conn net.Conn, log *log.Logger, chatRoom *Room) {
 	log.SetPrefix(fmt.Sprintf("%s (%s)", log.GetPrefix(), user.UserName))
 	log.Debugf("Got username %s", user.UserName)
 	chatRoom.AddUser(&user)
+	defer chatRoom.Delete(&user)
+
 	presenceNotif := chatRoom.GetConnectedUsers(&user)
 	fmt.Fprintln(conn, presenceNotif)
 	chatRoom.NotifyMembers(&user, "entered")
@@ -78,5 +80,4 @@ func reqHandler(conn net.Conn, log *log.Logger, chatRoom *Room) {
 	}
 
 	chatRoom.NotifyMembers(&user, "left")
-	defer chatRoom.Delete(&user)
 }
