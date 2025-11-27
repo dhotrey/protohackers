@@ -21,6 +21,20 @@ resource "google_compute_instance" "protohackers_vm" {
   tags = ["http-server", "protohackers-server", "protohackers"] 
 }
 
+resource "google_compute_firewall" "allow_ssh" {
+  name    = "allow-ssh-ingress"
+  network = "default"
+  
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  # Allow from everywhere (or put your specific home IP here)
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["protohackers-server"]
+}
+
 resource "google_compute_firewall" "protohackers_ingress" {
   name         = "protohackers-ingress-6942"
   network      = "default"
@@ -33,8 +47,12 @@ resource "google_compute_firewall" "protohackers_ingress" {
     ports    = ["6942"]
   }
 
-  source_ranges = ["0.0.0.0/0"]
-  # source_ranges = ["206.189.113.124/32"]
+  allow {
+    protocol = "udp"
+    ports    = ["6942"]
+  }
+  # source_ranges = ["0.0.0.0/0"]
+  source_ranges = ["206.189.113.124/32"]
   description   = "Allow inbound TCP 6942 from Protohackers tester"
 }
 
@@ -50,7 +68,7 @@ resource "google_compute_firewall" "protohackers_egress" {
     protocol = "all"
   }
 
-  destination_ranges = ["0.0.0.0/0"]
-  # destination_ranges = ["206.189.113.124/32"]
+  # destination_ranges = ["0.0.0.0/0"]
+  destination_ranges = ["206.189.113.124/32"]
   description        = "Allow outbound traffic to Protohackers tester"
 }
